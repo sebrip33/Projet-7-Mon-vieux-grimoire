@@ -1,6 +1,5 @@
 const Book = require('../models/Book');
 const fs = require('fs');
-const sharp = require('sharp');
 
 exports.createBook = (req, res, next) => {
     const bookObject = JSON.parse(req.body.book);
@@ -92,40 +91,38 @@ exports.createBook = (req, res, next) => {
         });
   };
 
-  exports.ratingBook = async (req, res, next) => {
-    try {
-        const { userId } = req.auth;
-        const { grade } = req.body;
+  exports.ratingBook = (req, res) => {
+    // Cherche le livre correspondant à l'identifiant
+    Book.findOne({ _id: req.params.id })
+      .then(book => {
+        // Ajoute une nouvelle note au tableau ratings du livre
+          book.ratings.push({
+            userId: req.auth.userId,
+            grade: req.body.rating
+          });
+          
+          // Calcul de la somme des notes
+          let totalRating = book.ratings.reduce((acc, rating) => acc + rating.grade, 0);
 
-        // Vérifier que la note est comprise entre 0 et 5
-        if (grade < 0 || grade > 5) {
-            return res.status(400).json({ message: 'La note doit être comprise entre 0 et 5' });
-        }
-
-        const updatedBook = await Book.findOneAndUpdate(
-            { _id: req.params.id },
-            { $push: { ratings: { userId, grade } } },
-            { new: true }
-        );
-
-        if (!updatedBook) {
-            return res.status(404).json({ message: 'Livre introuvable ou vous n\'avez pas encore noté ce livre' });
-        }
-
-        // Vérifier si l'utilisateur a déjà noté ce livre
-        const existingRating = updatedBook.ratings.find(rating => rating.userId === userId);
-        if (existingRating) {
-            return res.status(200).json({ message: 'Vous avez déjà noté ce livre' });
-        }
-
-        // Calculer la nouvelle note moyenne
-        const sum = updatedBook.ratings.reduce((acc, rating) => acc + rating.grade, 0);
-        updatedBook.averageRating = sum / updatedBook.ratings.length;
-
-        await updatedBook.save();
-
-        res.status(200).json({ message: 'Votre note a été prise en compte.' });
-    } catch (error) {
-        res.status(400).json({ error });
-    }
+          // Calcul de la moyenne des notes
+          book.averageRating = totalRating / book.ratings.length;
+          console.log(book.averageRating);
+          
+          return book.save();
+      })
+      .then(book => {
+        console.log('Book saved:', book);
+        res.json(book);
+      })
+      .catch(err => {
+        console.error(err);
+        res.status(401).json({ err });
+      })
+      .catch(error => {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur lors de l\'évaluation du livre.' });
+      });
 };
+
+
+  
