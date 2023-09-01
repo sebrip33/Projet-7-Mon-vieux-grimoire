@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 
 const routerRoutes = require('./routes/router');
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+app.use(mongoSanitize());
 
 app.use('/api/books', routerRoutes);
 app.use('/api/auth', userRoutes);
