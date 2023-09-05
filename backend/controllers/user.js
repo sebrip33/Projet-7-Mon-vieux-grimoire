@@ -9,6 +9,17 @@ exports.signup = (req, res, next) => {
   if (!req.body.email || !req.body.password) {
     return res.status(400).json({ message: 'Veuillez remplir tous les champs' })
   }
+  
+    // Valider l'adresse email
+    if (!/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(req.body.email)) {
+        return res.status(400).json({ message: 'Adresse email invalide' });
+        }
+
+    // Valider le mot de passe
+    if (req.body.password.length < 7) {
+    return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 7 caractères' });
+    }
+
   // Hacher le mot de passe
   bcrypt.hash(req.body.password, 10)
   .then(hash => {
