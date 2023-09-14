@@ -4,12 +4,14 @@ const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 const path = require('path');
 
+require('dotenv').config();
+
 const routerRoutes = require('./routes/router');
 const userRoutes = require('./routes/user');
 
 
 // Partie connexion à la base de donnée MongoD
-mongoose.connect('mongodb+srv://SebRip:bLTUjms4g52Nm%40F@cluster0.2vatfve.mongodb.net/?retryWrites=true&w=majority',
+mongoose.connect(process.env.MONGODB_URI,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
